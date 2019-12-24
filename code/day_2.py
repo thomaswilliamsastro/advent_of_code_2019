@@ -5,8 +5,9 @@ Day 2: 1202 Program Alarm
 @author: Tom Williams
 """
 
-import numpy as np
 import time
+
+import numpy as np
 
 
 def intcode_reader(intcode):

@@ -5,8 +5,9 @@ Day 1: The Tyranny of the Rocket Equation
 @author: Tom Williams
 """
 
-import numpy as np
 import time
+
+import numpy as np
 
 start = time.time()
 
