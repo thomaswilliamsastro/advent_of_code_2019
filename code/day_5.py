@@ -38,6 +38,4 @@ intcode = np.loadtxt('../inputs/day_5_input.txt',
 reader = IntcodeReader(intcode, system_id=5)
 reader.run()
 
-# intcode_reader(intcode, system_id=1)
-
 print('Complete! Took %.2fs' % (time.time() - start))
