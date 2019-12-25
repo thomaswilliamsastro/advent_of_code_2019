@@ -13,7 +13,8 @@ class IntcodeReader:
     def __init__(self, intcode, inputs=None, verbose=False, amplifier=False):
         self.program_complete = False
         self.amplifier = amplifier
-        self.idx = 0
+        self.base = 0
+        self.relative_base = 0
         self.inputs = inputs
         self.inputs_idx = 0
 
@@ -39,7 +40,7 @@ class IntcodeReader:
 
     def parse_opcode(self):
 
-        self.instruction = '{:05d}'.format(self.intcode[self.idx])
+        self.instruction = '{:05d}'.format(self.intcode[self.base])
         self.modes = [int(self.instruction[2]),
                       int(self.instruction[1]),
                       int(self.instruction[0])]
@@ -54,6 +55,7 @@ class IntcodeReader:
                              6: 2,
                              7: 3,
                              8: 3,
+                             9: 1,
                              99: 0,
                              }[self.opcode]
 
@@ -68,12 +70,19 @@ class IntcodeReader:
 
         for i in range(self.n_parameters):
 
-            self.positions[i] = self.intcode[self.idx + i + 1]
+            self.positions[i] = self.intcode[self.base + i + 1]
+
+            # If the array isn't long enough, pad out
+            if self.positions[i] > len(self.intcode):
+                self.intcode.extend([0] * (self.positions[i] - len(self.intcode) + 1))
 
             if self.modes[i] == 0:
                 self.parameters[i] = self.intcode[self.positions[i]]
             elif self.modes[i] == 1:
                 self.parameters[i] = self.positions[i]
+            elif self.modes[i] == 2:
+                self.positions[i] += self.relative_base
+                self.parameters[i] = self.intcode[self.positions[i]]
             else:
                 raise Warning('Unsupported mode %d' % self.modes[i])
 
@@ -88,10 +97,11 @@ class IntcodeReader:
             # 2: multiply numbers
             # 3: take an input, and store it to a position
             # 4: output the value of its parameter
-            # 5: jump-if-true: If first parameter non-zero, set idx to value of second parameter
-            # 6: jump-if-false: If first parameter zero, set idx to value of second parameter
+            # 5: jump-if-true: If first parameter non-zero, set base to value of second parameter
+            # 6: jump-if-false: If first parameter zero, set base to value of second parameter
             # 7: less than
             # 8: equals
+            # 9: adjust the relative base
 
             if self.opcode == 1:
 
@@ -104,14 +114,14 @@ class IntcodeReader:
             elif self.opcode == 3:
 
                 if type(self.inputs) == list:
-                    input = self.inputs[self.inputs_idx]
+                    new_input = self.inputs[self.inputs_idx]
 
                     self.inputs_idx = np.min([self.inputs_idx + 1, len(self.inputs) - 1])
 
                 else:
-                    input = self.inputs
+                    new_input = self.inputs
 
-                self.intcode[self.positions[0]] = input
+                self.intcode[self.positions[0]] = new_input
 
             elif self.opcode == 4:
 
@@ -119,19 +129,19 @@ class IntcodeReader:
                     print(self.parameters[0])
                 self.output.append(self.parameters[0])
                 if self.amplifier:
-                    self.idx += self.n_steps
+                    self.base += self.n_steps
                     return
 
             elif self.opcode == 5:
 
                 if self.parameters[0] != 0:
-                    self.idx = self.parameters[1]
+                    self.base = self.parameters[1]
                     self.n_steps = 0
 
             elif self.opcode == 6:
 
                 if self.parameters[0] == 0:
-                    self.idx = self.parameters[1]
+                    self.base = self.parameters[1]
                     self.n_steps = 0
 
             elif self.opcode == 7:
@@ -148,6 +158,10 @@ class IntcodeReader:
                 else:
                     self.intcode[self.positions[2]] = 0
 
+            elif self.opcode == 9:
+
+                self.relative_base += self.parameters[0]
+
             elif self.opcode == 99:
 
                 self.program_complete = True
@@ -158,9 +172,9 @@ class IntcodeReader:
 
             # Step forward
 
-            self.idx += self.n_steps
+            self.base += self.n_steps
 
             # If this puts us beyond the end of the input, the program is complete.
 
-            if self.idx > len(self.intcode):
+            if self.base > len(self.intcode):
                 self.program_complete = True
