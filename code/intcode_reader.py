@@ -10,10 +10,12 @@ import numpy as np
 
 class IntcodeReader:
 
-    def __init__(self, intcode, system_id=None):
+    def __init__(self, intcode, inputs=None, verbose=False, amplifier=False):
         self.program_complete = False
+        self.amplifier = amplifier
         self.idx = 0
-        self.system_id = system_id
+        self.inputs = inputs
+        self.inputs_idx = 0
 
         # Store the intcode, the original (since bits will get replaced), and the instruction code
         self.intcode = intcode.copy()
@@ -32,6 +34,8 @@ class IntcodeReader:
 
         # And any outputs saved
         self.output = []
+
+        self.verbose = verbose
 
     def parse_opcode(self):
 
@@ -99,12 +103,24 @@ class IntcodeReader:
 
             elif self.opcode == 3:
 
-                self.intcode[self.positions[0]] = self.system_id
+                if type(self.inputs) == list:
+                    input = self.inputs[self.inputs_idx]
+
+                    self.inputs_idx = np.min([self.inputs_idx + 1, len(self.inputs) - 1])
+
+                else:
+                    input = self.inputs
+
+                self.intcode[self.positions[0]] = input
 
             elif self.opcode == 4:
 
-                print(self.parameters[0])
+                if self.verbose:
+                    print(self.parameters[0])
                 self.output.append(self.parameters[0])
+                if self.amplifier:
+                    self.idx += self.n_steps
+                    return
 
             elif self.opcode == 5:
 
