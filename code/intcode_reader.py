@@ -10,9 +10,9 @@ import numpy as np
 
 class IntcodeReader:
 
-    def __init__(self, intcode, inputs=None, verbose=False, amplifier=False):
+    def __init__(self, intcode, inputs=None, verbose=False, pause_on_output=False):
         self.program_complete = False
-        self.amplifier = amplifier
+        self.pause_on_output = pause_on_output
         self.base = 0
         self.relative_base = 0
         self.inputs = inputs
@@ -72,21 +72,29 @@ class IntcodeReader:
 
             self.positions[i] = self.intcode[self.base + i + 1]
 
-            # If the array isn't long enough, pad out
-            if self.positions[i] > len(self.intcode):
-                self.intcode.extend([0] * (self.positions[i] - len(self.intcode) + 1))
-
             if self.modes[i] == 0:
+
+                # If the array isn't long enough, pad out
+                if self.positions[i] > len(self.intcode):
+                    self.intcode.extend([0] * (self.positions[i]))
+
                 self.parameters[i] = self.intcode[self.positions[i]]
             elif self.modes[i] == 1:
                 self.parameters[i] = self.positions[i]
             elif self.modes[i] == 2:
                 self.positions[i] += self.relative_base
+
+                # If the array isn't long enough, pad out
+                if self.positions[i] > len(self.intcode):
+                    self.intcode.extend([0] * (self.positions[i]))
+
                 self.parameters[i] = self.intcode[self.positions[i]]
             else:
                 raise Warning('Unsupported mode %d' % self.modes[i])
 
     def run(self):
+
+        n_outputs = 0
 
         while not self.program_complete:
 
@@ -125,10 +133,12 @@ class IntcodeReader:
 
             elif self.opcode == 4:
 
+                n_outputs += 1
+
                 if self.verbose:
                     print(self.parameters[0])
                 self.output.append(self.parameters[0])
-                if self.amplifier:
+                if n_outputs == self.pause_on_output:
                     self.base += self.n_steps
                     return
 

@@ -82,7 +82,7 @@ for phase_combination in phase_combinations:
     readers = {}
 
     for i in range(len(phase_combination)):
-        readers[i] = IntcodeReader(intcode, amplifier=True)
+        readers[i] = IntcodeReader(intcode, pause_on_output=1)
 
     amplification_finished = False
 

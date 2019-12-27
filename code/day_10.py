@@ -8,7 +8,6 @@ Day 10: Monitoring Station
 import time
 
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 
 start = time.time()
