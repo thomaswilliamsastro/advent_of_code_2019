@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Day 11: Space Police
+Day 13: Care Package
 
 @author: Tom Williams
 """
@@ -39,25 +39,18 @@ print('There are %d blocks' % n_blocks)
 # Part 2: Play some breakout!
 
 move = 0
-paddle_input = 0
 program_complete = False
 board_setup = False
 
 intcode[0] = 2
 
 reader = IntcodeReader(intcode,
-                       pause_on_input=True,
-                       inputs=paddle_input)
+                       pause_for_input=True)
 
 if graphics:
     plt.figure(figsize=(12, 8))
 
 while not program_complete:
-
-    reader.output = []
-    reader.inputs = paddle_input
-
-    plt.clf()
 
     reader.run()
 
@@ -66,7 +59,6 @@ while not program_complete:
 
     # Pull out tiles and their positions, and the score
     output = reader.output
-    # print(output)
 
     # The program outputs position and score changes, so check for those
     score_start = np.where(np.array(output) == -1)[0]
@@ -79,8 +71,8 @@ while not program_complete:
         score = output[int(score_start):int(score_start) + 3]
     else:
 
-        # If the ball destroys 2 blocks we get 2 score updates! Take the final one and remove the others from the
-        # list.
+        # If the ball destroys multiple blocks we get multiple score updates! Take the final one and remove the others
+        # from the list.
 
         for i, idx in enumerate(score_start[:-1]):
             idx += 3*i
@@ -104,6 +96,8 @@ while not program_complete:
     board[y_coords, x_coords] = tile
 
     if graphics:
+
+        plt.clf()
 
         plt.imshow(board,
                    cmap='rainbow')
@@ -142,9 +136,12 @@ while not program_complete:
 
     paddle_input = np.sign(ball_pos[1][0]-paddle_pos[1][0])
 
+    reader.output = []
+    reader.inputs = paddle_input
+
 if graphics:
     plt.show()
 
-print(score[-1])
+print('Final score: %d ' % score[-1])
 
 print('Complete! Took %.2fs' % (time.time() - start))

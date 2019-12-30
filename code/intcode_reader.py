@@ -10,11 +10,14 @@ import numpy as np
 
 class IntcodeReader:
 
-    def __init__(self, intcode, inputs=None, verbose=False, pause_on_input=False,
-                 pause_on_output=False):
+    def __init__(self, intcode,
+                 inputs=None,
+                 pause_for_input=False,
+                 pause_on_output=False,
+                 verbose=False):
         self.program_complete = False
-        self.pause_on_input = pause_on_input
-        self.currently_input_paused = False
+        self.pause_for_input = pause_for_input
+        self.paused = False
         self.pause_on_output = pause_on_output
         self.base = 0
         self.relative_base = 0
@@ -132,16 +135,16 @@ class IntcodeReader:
                 else:
                     new_input = self.inputs
 
-                if self.pause_on_input and not self.currently_input_paused:
+                if self.pause_for_input and not self.paused:
 
-                    self.currently_input_paused = True
+                    self.paused = True
                     return
 
                 self.intcode[self.positions[0]] = new_input
 
-                if self.pause_on_input:
+                if self.pause_for_input:
 
-                    self.currently_input_paused = False
+                    self.paused = False
 
             elif self.opcode == 4:
 
